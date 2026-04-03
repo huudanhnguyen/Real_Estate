@@ -6,16 +6,8 @@ import { connectSocket, disconnectSocket, socket } from "@/config/socket";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  /* ================= USER ================= */
-  const [user, setUser] = useState(() => {
-    return JSON.parse(localStorage.getItem("user")) || null;
-  });
+  const [user, setUser] = useState(null);
 
-  const [accessToken, setAccessToken] = useState(() => {
-    return localStorage.getItem("accessToken") || null;
-  });
-
-  /* ================= BADGE ================= */
   const [unreadMessages, setUnreadMessages] = useState(() => {
     return Number(localStorage.getItem("unreadMessages")) || 0;
   });
@@ -24,36 +16,20 @@ export const AuthProvider = ({ children }) => {
     return Number(localStorage.getItem("unreadNoti")) || 0;
   });
 
-  /* ================= LOCAL STORAGE ================= */
   useEffect(() => {
-    if (user) localStorage.setItem("user", JSON.stringify(user));
-    else localStorage.removeItem("user");
-
-    if (accessToken) localStorage.setItem("accessToken", accessToken);
-    else localStorage.removeItem("accessToken");
-  }, [user, accessToken]);
-
-  /* ================= AUTO LOAD USER (RẤT QUAN TRỌNG) ================= */
-  useEffect(() => {
-    if (!accessToken) return;
-    if (user) return; // đã có user thì không gọi lại
-
     refreshUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, []);
 
-  /* ================= SOCKET CONNECT ================= */
   useEffect(() => {
-    if (user?.id && accessToken) {
+    if (user?.id) {
       connectSocket(user.id);
     } else {
       disconnectSocket();
     }
 
     return () => disconnectSocket();
-  }, [user, accessToken]);
+  }, [user]);
 
-  /* ================= SOCKET EVENTS ================= */
   useEffect(() => {
     if (!user?.id) return;
 
@@ -84,35 +60,37 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user]);
 
-  /* ================= REFRESH USER ================= */
   const refreshUser = async () => {
     try {
       const fresh = await getMyProfileAPI();
       setUser(fresh);
-      localStorage.setItem("user", JSON.stringify(fresh));
     } catch (err) {
       console.error("REFRESH USER ERROR:", err);
-      logout(); // token lỗi thì logout luôn
+      logout();
     }
   };
 
-  /* ================= LOGOUT ================= */
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout API error:", err);
+    }
+
     setUser(null);
-    setAccessToken(null);
     setUnreadMessages(0);
     setUnreadNoti(0);
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
     localStorage.removeItem("unreadMessages");
     localStorage.removeItem("unreadNoti");
 
     disconnectSocket();
   };
 
-  /* ================= FLAGS ================= */
-  const isAuthenticated = !!accessToken;
+  const isAuthenticated = !!user;
   const isAdmin = user?.role?.toLowerCase() === "admin";
 
   return (
@@ -120,8 +98,6 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         setUser,
-        accessToken,
-        setAccessToken,
         isAuthenticated,
         isAdmin,
         logout,

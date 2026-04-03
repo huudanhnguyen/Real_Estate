@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const API = axios.create({
   baseURL: "https://provinces.open-api.vn/api",
-  timeout: 5000, // 🔥 QUAN TRỌNG
+  timeout: 5000,
 });
 
 const isNumericCode = (v) => typeof v === "string" && /^[0-9]+$/.test(v);

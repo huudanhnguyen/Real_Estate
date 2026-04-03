@@ -2,7 +2,6 @@ const AuthService = require("@services/auth.service");
 const GoogleService = require("@services/google.service");
 
 const AuthController = {
-
   register: async (req, res) => {
     try {
       const newUser = await AuthService.register(req.body);
@@ -21,10 +20,23 @@ const AuthController = {
     }
   },
 
-
   login: async (req, res) => {
     try {
       const data = await AuthService.login(req.body);
+
+      res.cookie("accessToken", data.accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 15 * 60 * 1000,
+      });
+
+      res.cookie("refreshToken", data.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       res.status(200).json({
         message: "Đăng nhập thành công",
@@ -32,10 +44,8 @@ const AuthController = {
           id: data.user.id,
           email: data.user.email,
           fullName: data.user.fullName,
-          role: data.user.role, 
+          role: data.user.role,
         },
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
       });
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -44,7 +54,7 @@ const AuthController = {
 
   me: async (req, res) => {
     try {
-      const userId = req.user?.id; 
+      const userId = req.user?.id;
 
       if (!userId) {
         return res
@@ -65,7 +75,7 @@ const AuthController = {
           avatarPath: user.avatarPath,
           balance: user.balance,
           score: user.score,
-          role: user.role, 
+          role: user.role,
           createdAt: user.createdAt,
         },
       });
@@ -103,7 +113,7 @@ const AuthController = {
       const data = await GoogleService.loginWithGoogle(code);
 
       return res.redirect(
-        `http://localhost:5173/login-success?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`
+        `http://localhost:5173/login-success?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
       );
     } catch (err) {
       return res.status(400).json({ message: err.message });
@@ -137,7 +147,6 @@ const AuthController = {
       res.status(400).json({ message: err.message });
     }
   },
-
 
   resetPassword: async (req, res) => {
     try {

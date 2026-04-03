@@ -5,7 +5,6 @@ import { loginAPI } from "@/services/auth.api";
 import { useAuth } from "@/context/auth.context";
 import { GOOGLE_LOGIN_URL } from "@/config/auth.config";
 
-
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +28,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { setUser, setAccessToken } = useAuth();
+  const { setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm({
@@ -42,12 +41,9 @@ export default function LoginPage() {
 
   const onSubmit = async (values) => {
     const res = await loginAPI(values);
-    console.log("LOGIN RESPONSE:", res);
-    console.log("LOGIN USER:", res.user);
 
-    if (res.accessToken) {
+    if (res.user) {
       setUser(res.user);
-      setAccessToken(res.accessToken);
       alert("Đăng nhập thành công!");
       navigate("/");
     } else {

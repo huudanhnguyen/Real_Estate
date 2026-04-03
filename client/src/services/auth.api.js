@@ -6,6 +6,7 @@ export const registerAPI = async (data) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    credentials: "include",
   });
 
   return res.json();
@@ -16,6 +17,7 @@ export const loginAPI = async (data) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    credentials: "include",
   });
 
   return res.json();

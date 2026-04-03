@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const authRoute = require("@routes/auth.route");
 const postRoute = require("@routes/post.route");
@@ -21,16 +22,25 @@ const adminRoute = require("@routes/admin.route");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  }),
+);
+
+app.use(cookieParser());
+
 app.post(
   "/api/wallets/webhook",
   express.raw({ type: "application/json" }),
   walletController.handleWebhook,
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ROUTES
+// ================= ROUTES =================
 app.use("/api/auth", authRoute);
 app.use("/api/posts", postRoute);
 app.use("/api/upload", uploadRoute);
@@ -45,8 +55,11 @@ app.use("/api/wallets", walletRoute);
 app.use("/api/boost", boostRoute);
 app.use("/api/pricings", pricingRoute);
 
-
 app.use("/api/users", userRoute);
 app.use("/api/admin", adminRoute);
+
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 
 module.exports = app;
